@@ -13,19 +13,47 @@ OUIGO 7851 -> Paris to Toulon ~ $100
 """
 
 # Updated arrays: Each tuple is (Airport Code, Airport Name)
-From = [
-    ("DTW", "Detroit Metropolitan"),
-    ("ORD", "Chicago O'Hare"),
-    ("YYZ", "Toronto Pearson")
-]
+From = { 
+    "DTW" : {
+        "name" : "Detroit Metropolitan",
+        "extra travel time" : 0,
+        "extra cost" : 0
+    },
+    "ORD" : {
+        "name" : "Chicago O'Hare",
+        "extra travel time" : (4 * 60 * 2),  # 8 hours extra for round trip,
+        "extra cost" : 0
+    },
+    "YYZ" : {
+        "name" : "Toronto Pearson",
+        "extra travel time" : (3.5 * 60 * 2),  # 7 hours extra for round trip,
+        "extra cost" : 0
+    }
+}
 
-To = [
-    ("NCE", "Nice Côte d'Azur"),
-    ("MRS", "Marseille Provence"),
-    ("CDG", "Charles de Gaulle")
-]
+To = { "NCE" : {
+        "name" : "Nice Côte d'Azur",
+        "extra travel time" : 110 * 2,  # 110 minutes extra for round trip,
+        "extra cost" : 10, # per person
+        "route" : "OUIGO 7856 (Nice to Toulon)",
+        "max_stops" : 2
+    },
+    "MRS" : {
+        "name" : "Marseille Provence",
+        "extra travel time" : 45 * 2,  # 45 minutes extra for round trip,
+        "extra cost" : 15, # per person
+        "route" : "OUIGO 7856 (Nice to Toulon)",
+        "max_stops" : 2
+    },
+    "CDG" : {
+        "name" : "Paris Charles de Gaulle",
+        "extra travel time" : ((4 * 60) + 42) * 2,
+        "extra cost" : 100, # per person
+        "route" : "TGV INOUI 9810 -> TGV INOUI 6155",
+        "max_stops" : 0
+    }
+}
 
-MaxStops = 2
 MaxDuration = "13 hr"
 People = 2
 
@@ -57,18 +85,18 @@ def get_flights():
     results = []
 
     # Loop over the tuple arrays for From and To
-    for f_code, f_name in From:
-        for t_code, t_name in To:
+    for f_code,f_info in From.items():
+        for t_code, t_info in To.items():
 
             filter = create_filter(
                 flight_data=[
-                    FlightData(date=Leave, from_airport=f_code, to_airport=t_code, max_stops=MaxStops),
-                    FlightData(date=Return, from_airport=t_code, to_airport=f_code, max_stops=MaxStops)
+                    FlightData(date=Leave, from_airport=f_code, to_airport=t_code, max_stops=t_info['max_stops']),
+                    FlightData(date=Return, from_airport=t_code, to_airport=f_code, max_stops=t_info['max_stops'])
                 ],
                 trip="round-trip",
                 seat="economy",
                 passengers=Passengers(adults=People),
-                max_stops=MaxStops)
+                max_stops=t_info['max_stops'])
             
             b64 = filter.as_b64().decode('utf-8')
             url = f"https://www.google.com/travel/flights?tfs={b64}"
@@ -97,10 +125,18 @@ def get_flights():
             flights = []
             for flight in result.flights:
                 # Use the display names for From and To
-                flight.From = f_name
-                flight.To = t_name
+                flight.From = f_info['name']
+                flight.To = t_info['name']
+                flight.route_extra_time = f_info['extra travel time'] + t_info['extra travel time']
+                flight.route_extra_cost = f_info['extra cost'] + t_info['extra cost']
                 flight.url = url
                 flight.return_date = Return
+                flight.total_duration = parse_duration(flight.duration) + flight.route_extra_time
+
+                try :
+                    flight.total_cost = float(flight.price.strip('$')) + (flight.route_extra_cost * People)
+                except Exception:
+                    flight.total_cost = "N/A"
                 # Calculate price per person
                 try:
                     flight.price_per_person = float(flight.price.strip('$')) / People
@@ -142,6 +178,9 @@ def main():
         print(f"\tArrival: {cheapest.arrival}")
         print(f"\tDuration: {cheapest.duration}")
         print(f"\tStops: {cheapest.stops}")
+        print(f"\tTotal Duration: {int(cheapest.total_duration / 60) } hrs {cheapest.total_duration % 60} min")
+        print(f"\tTotal Cost: ${cheapest.total_cost:.2f}")
+
 
 if __name__ == "__main__":
     main()
