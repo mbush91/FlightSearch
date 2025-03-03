@@ -26,7 +26,16 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ flight.From }} to {{ flight.To }}</h5>
                         <p class="card-text">
-                            <strong>Price:</strong> {{ flight.price }} (<em>${{ "%.2f"|format(flight.price_per_person) }}/person</em>)<br>
+                            <strong>Price:</strong> {{ flight.price }} 
+                            (<em>${{ "%.2f"|format(flight.price_per_person) }}/person</em>)
+                            <strong>{% if flight.current_prices == 'low' %}
+                                <span class="text-success">(Low)</span>
+                            {% elif flight.current_prices == 'typical' %}
+                                <span class="text-warning">(Typical)</span>
+                            {% elif flight.current_prices == 'high' %}
+                                <span class="text-danger">(High)</span>
+                            {% endif %}</strong>
+                            <br>
                             <strong>Departure:</strong> {{ flight.departure }}<br>
                             <strong>Arrival:</strong> {{ flight.arrival }}<br>
                             <strong>Duration:</strong> {{ flight.duration }}<br>

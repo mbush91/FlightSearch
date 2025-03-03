@@ -132,6 +132,7 @@ def get_flights():
                 flight.url = url
                 flight.return_date = Return
                 flight.total_duration = parse_duration(flight.duration) + flight.route_extra_time
+                flight.current_prices = result.current_price
 
                 try :
                     flight.total_cost = float(flight.price.strip('$')) + (flight.route_extra_cost * People)
