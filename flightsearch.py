@@ -77,7 +77,7 @@ def parse_duration(duration_str):
     return hours * 60 + minutes
 
 def get_flights():
-    today = datetime.date.today()
+    today = datetime.datetime.now()
     folder = "flight_data"
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -101,7 +101,7 @@ def get_flights():
             b64 = filter.as_b64().decode('utf-8')
             url = f"https://www.google.com/travel/flights?tfs={b64}"
 
-            data_filename = f"{folder}/{today.year}{today.month}{today.day}_flight_data_{f_code}_{t_code}_{Leave}_{Return}.pkl"
+            data_filename = f"{folder}/{today.year}{today.month}{today.day}{int(today.hour/3)}_flight_data_{f_code}_{t_code}_{Leave}_{Return}.pkl"
             if os.path.exists(data_filename):
                 with open(data_filename, "rb") as fd:
                     result = pickle.load(fd)
