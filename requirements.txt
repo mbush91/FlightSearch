@@ -1,3 +1,5 @@
 fast-flights
 flask
 gunicorn
+requests
+dotenv
